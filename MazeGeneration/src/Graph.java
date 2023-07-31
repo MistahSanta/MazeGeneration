@@ -3,7 +3,7 @@ import java.util.Stack;
 import java.util.Random; 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.LinkedList;
+
 import java.util.ArrayList;
 
 public class Graph {
@@ -11,8 +11,6 @@ public class Graph {
     private int [][] mazeMatrix;
     private Stack<Vertex> stack = new Stack<>();     
 
-    private int height; 
-    private int width;
     private int mazeWidth; 
     private int mazeHeight;
 
@@ -21,13 +19,11 @@ public class Graph {
     private static final String ASCCI_BLACK = "\u001b[40m";
     private static final String ASCCI_RESET = "\u001B[0m";
     private static final String ASCCI_WHITE = "\u001B[47m";
-    private static final String ASCCI_GREEN = "\u001B[42m";
+    private static final String ASCCI_BLUE = "\u001B[42m";
     private static final String ASCCI_PURPLE = "\u001B[45m";
 
     public Graph(int width, int height)
     {
-        this.height = height;
-        this.width = width;
         mazeHeight = 1 + 2 * ( height - 1 );
         mazeWidth = 1 + 2 * ( width - 1 );
         mazeMatrix = new int [ mazeHeight ][ mazeWidth ]; 
@@ -35,18 +31,18 @@ public class Graph {
        
         generateGraphDFS(); 
 
-        System.out.print( printMaze() );
+      
     }
 
     public String printMaze()
     {
         // This function will print walls around the graph that represent the node. If the nodes are connected, then there is no wall 
         StringBuilder sb = new StringBuilder();
-        sb.append( ASCCI_YELLOW + "  ".repeat(mazeWidth) + "    " + ASCCI_RESET + '\n');
+        sb.append( ASCCI_YELLOW + "//".repeat(mazeWidth) + "////" + ASCCI_RESET + '\n');
 
         for ( int i = 0; i < mazeHeight; i++)
         {
-            sb.append(ASCCI_YELLOW + "  " + ASCCI_RESET);
+            sb.append(ASCCI_YELLOW + "//" + ASCCI_RESET);
            for ( int j = 0; j < mazeWidth; j++)
            {
                 if ( mazeMatrix[i][j] == 0)
@@ -63,14 +59,15 @@ public class Graph {
                     sb.append( ASCCI_PURPLE + "  " + ASCCI_RESET);
                 } else if ( mazeMatrix[i][j] == 3)
                 {
-                    sb.append( ASCCI_GREEN + "  " + ASCCI_RESET);
+                    sb.append( ASCCI_BLUE + "  " + ASCCI_RESET);
                 }
                
            }
-           sb.append(ASCCI_YELLOW + "  " + ASCCI_RESET + '\n');
+           sb.append(ASCCI_YELLOW + "//" + ASCCI_RESET + '\n');
         }
-        sb.append( ASCCI_YELLOW + "  ".repeat(mazeWidth) + "    " + ASCCI_RESET + '\n');
-        
+        sb.append( ASCCI_YELLOW + "//".repeat(mazeWidth) + "////" + ASCCI_RESET + '\n');
+
+
         return sb.toString();
     }
 
@@ -97,31 +94,43 @@ public class Graph {
         Set<String> visited = new HashSet<>(); 
         ArrayList<Vertex> neighbors = new ArrayList<>();
         
+        Vertex endNode = null;
+        int stackLength = 0;
+        
         Random random = new Random();
         int randomXEdge = random.nextBoolean() ? 0 : mazeWidth - 1; 
         int randomYEdge = random.nextBoolean() ? 0 : mazeHeight - 1; 
 
+        
         Vertex startNode = new Vertex(randomXEdge , randomYEdge, null);
         mazeMatrix[ startNode.getY() ][ startNode.getX() ] = 2; // Mark startNode as the starting node in the maze matrix 
         visited.add( Integer.toString( startNode.getX()) + " " + Integer.toString( startNode.getY()));
         neighbors = getNeighbors( startNode, visited);
         randomlyPushNeighbors( neighbors );
-        Vertex oldVertex = startNode;
 
+
+        
 
         while ( !stack.isEmpty() ) 
         {
             Vertex cur = stack.pop(); 
-            
-        
             breakWall( cur.getParentNode() , cur);
-            
-            oldVertex = cur; 
             mazeMatrix[ cur.getY() ][ cur.getX()  ] = 1; 
             neighbors = getNeighbors(cur, visited);
             randomlyPushNeighbors( neighbors );
+            
+            if ( checkIfEdgeNode(cur) )
+            {
+                // Compare the stack size and pick the longest one
+                if ( stackLength < stack.size())
+                {
+                    endNode = cur; 
+                    stackLength = stack.size();
+                }
+            }
         }
 
+        mazeMatrix[ endNode.getY()][ endNode.getX() ] = 3;
     }  
 
     private void breakWall( Vertex oldVertex, Vertex newVertex)
@@ -165,6 +174,15 @@ public class Graph {
         }
     }
 
+    private boolean checkIfEdgeNode(Vertex cur) 
+    {
+        if ( cur == null ) return false;
+
+        int x = cur.getX();
+        int y = cur.getY();
+
+        return ( (x == 0 || x == mazeWidth - 1) && (y == 0 || y == mazeHeight - 1) ); 
+    }
 
 
 }
